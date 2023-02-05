@@ -95,7 +95,7 @@ function playPerFrame() {
 
   if (jumping) {
     dino.y -= 5
-    if (dino.y < 100) {
+    if (dino.y < 50) {
       jumping = false
     }
     jumpTimer++
