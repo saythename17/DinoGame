@@ -13,7 +13,7 @@
 // 11. Add more powerups
 // 12. Add more enemies
 /** 
-Q. 점프 여러번 금지?
+Q. 이단 점프 기능 구현
 
 Q. 공룡이 달리는 것처럼 보이게?
 
@@ -29,13 +29,15 @@ var ctx = canvas.getContext('2d')
 
 canvas.width = window.innerWidth - 100
 canvas.height = window.innerHeight - 100
+const windowMiddleHeight = window.innerHeight / 2 - 100
 
 const dinoImage = new Image()
 dinoImage.src = 'dino.png'
 
+/********UI, Chraacter************* */
 var dino = {
   x: 20,
-  y: 200,
+  y: windowMiddleHeight,
   width: 100,
   height: 100,
   draw() {
@@ -65,24 +67,42 @@ class Cactus {
   }
 }
 
+const score = {
+  value: 0,
+  x: canvas.width - 50,
+  y: 100,
+  draw() {
+    ctx.fillStyle = 'black'
+    ctx.font = '30px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText(this.value, this.x, this.y)
+  },
+}
+
+/*************************************/
+
 let animation
 let timer = 0
+
+let jumping = false
 let jumpTimer = 0
+let jumpHeight = 150
 
 let cactuses = []
-let score = 0
-// let scoreText = document.getElementById('score')
-let jumping = false
 
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 function playPerFrame() {
   animation = requestAnimationFrame(playPerFrame)
   timer++
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  if (timer % 15 === 0) {
+    score.value++
+  }
   if (timer % 120 === 0) {
-    var cactus = new Cactus(1500, 200, 100, 100)
-    cactuses.push(cactus)
+    console.log('timer', timer)
+    generateRandomCactus()
   }
   cactuses.forEach((cactus, index, array) => {
     if (cactus.x < 0) {
@@ -95,11 +115,11 @@ function playPerFrame() {
 
   if (jumping) {
     dino.y -= 5
-    if (dino.y < 50) {
+    if (dino.y < jumpHeight) {
       jumping = false
     }
     jumpTimer++
-  } else if (dino.y < 200) {
+  } else if (dino.y < windowMiddleHeight) {
     dino.y += 3
     jumpTimer = 0
   }
@@ -107,9 +127,18 @@ function playPerFrame() {
     jumping = false
   }
   dino.draw()
+  score.draw()
 }
 playPerFrame()
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+document.addEventListener('keydown', (e) => {
+  if (dino.y >= windowMiddleHeight && e.code === 'Space') {
+    jumping = true
+  }
+})
+
+//------------------------------------
 const detectCollision = (dino, cactus) => {
   if (
     dino.x < cactus.x + cactus.width + 30 &&
@@ -117,15 +146,20 @@ const detectCollision = (dino, cactus) => {
     dino.y < cactus.y + cactus.height &&
     dino.y + dino.height > cactus.y
   ) {
-    console.log('collision')
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     cancelAnimationFrame(animation)
     return true
   }
 }
 
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    jumping = true
-  }
-})
+function generateRandomCactus() {
+  if (getRandomInt(0, 100) > 50) return
+  var cactus = new Cactus(1500, windowMiddleHeight, 100, 100)
+  cactuses.push(cactus)
+}
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min)
+  max = Math.floor(max)
+  return Math.floor(Math.random() * (max - min)) + min //최댓값은 제외, 최솟값은 포함
+}
